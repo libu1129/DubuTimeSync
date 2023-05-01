@@ -27,33 +27,72 @@ public class NtpTool
     public async Task sync(List<string> ntpServers)
     {
         // Fetch the time from NTP servers
-        var ntpTimes = await GetNtpTimesAsync(ntpServers);
+        var ntpTimes = await GetNtpTimesAsync(ntpServers).ConfigureAwait(false);
 
         // Calculate the median time
-        var medianTime = ntpTimes.Where(p => p != null).Median(p => p.UtcNow.ToUnixTimeMilliseconds()); //GetMedianTime(ntpTimes);
-        Console.WriteLine($"Median Time: {medianTime}");
+        var medianTime = ntpTimes.Where(p => p.clock != null).Median(p => p.clock.UtcNow.ToUnixTimeMilliseconds()); //GetMedianTime(ntpTimes);
+        on_log?.Invoke($"중간 시간 : {medianTime.server} {medianTime.clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
 
         // Set system time
-        SetSystemTime(medianTime.Now);
+        SetSystemTime(medianTime.clock.UtcNow);
+        on_log?.Invoke($"시스템 시간 변경 성공");
     }
 
-    private static async Task<IEnumerable<NtpClock>> GetNtpTimesAsync(List<string> ntpServers)
+
+    public class vm
     {
-        var tasks = ntpServers
-            .Select(async server =>
+        public string server;
+        public NtpClock? clock;
+    }
+    private async Task<IEnumerable<vm>> GetNtpTimesAsync(List<string> ntpServers)
+    {
+        List<Task<vm>> t = new();
+        foreach (var a in ntpServers)
+        {
+            var server = a;
+            var tt = Task.Run(async () =>
             {
+                var ret = new vm()
+                {
+                    server = server,
+                };
+                using CancellationTokenSource ct = new CancellationTokenSource();
                 try
                 {
                     var client = new NtpClient(server);
-                    return await client.QueryAsync();
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(1000);
+                        try
+                        {
+                            ct.Cancel();
+                            ct.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    });
+                    var rcv = await client.QueryAsync(ct.Token);
+                    on_log?.Invoke($"poll {server} 시간 수신 성공 ({rcv.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")})");
+                    ret.clock = rcv;
+                }
+                catch (OperationCanceledException ex)
+                {
+                    on_log?.Invoke($"poll {server} 지정된 시간 내 수신 실패");
                 }
                 catch (Exception ex)
                 {
-                    return null;
+                    on_log?.Invoke($"poll {server} 시간 수신 실패");
                 }
+                return ret;
             });
+            t.Add(tt);
+            await Task.Delay(500);
+        }
 
-        return await Task.WhenAll(tasks);
+
+        return await Task.WhenAll(t).ConfigureAwait(false);
     }
 
     private static void SetSystemTime(DateTimeOffset medianTime)

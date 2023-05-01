@@ -14,6 +14,7 @@ namespace DubuTimeSync
         Setting setting = new Setting();
         bool disposed = false;
         LinkedList<string> logs = new();
+        NtpTool tool = new NtpTool();
 
         public Form1()
         {
@@ -22,11 +23,17 @@ namespace DubuTimeSync
             if (setting.hide_on_startup) this.Visible = false;
             this.textBox1.Select(0, 0);
             Task.Run(loop);
+            tool.on_log += message =>
+            {
+                this.add_log(message);
+            };
         }
 
         private void load_setting()
         {
             var ini_file = Path.Combine(Application.StartupPath, "setting.json");
+            this.setting = new Setting();
+            this.setting.load_default();
             if (File.Exists(ini_file))
             {
                 this.setting = JObject.Parse(File.ReadAllText(ini_file)).ToObject<Setting>();
@@ -44,7 +51,6 @@ namespace DubuTimeSync
                 try
                 {
                     load_setting();
-                    NtpTool tool = new NtpTool();
                     if (setting.ntp_addresses.Count() == 0) throw new Exception("ntp 주소가 0개");
                     await tool.sync(setting.ntp_addresses);
                 }
@@ -61,7 +67,7 @@ namespace DubuTimeSync
             logs.AddFirst($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}] {message}");
             this.textBox1.Invoke(() =>
             {
-                this.textBox1.Text = string.Join(Environment.NewLine, this.logs.Reverse());
+                this.textBox1.Text = string.Join(Environment.NewLine, this.logs);
             });
         }
 

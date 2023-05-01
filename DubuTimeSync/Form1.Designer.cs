@@ -50,7 +50,7 @@
             textBox1.Multiline = true;
             textBox1.Name = "textBox1";
             textBox1.ReadOnly = true;
-            textBox1.Size = new Size(417, 451);
+            textBox1.Size = new Size(678, 267);
             textBox1.TabIndex = 0;
             // 
             // notifyIcon1
@@ -86,7 +86,7 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { 파일ToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(441, 24);
+            menuStrip1.Size = new Size(702, 24);
             menuStrip1.TabIndex = 1;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -115,7 +115,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(441, 490);
+            ClientSize = new Size(702, 306);
             Controls.Add(menuStrip1);
             Controls.Add(textBox1);
             Icon = (Icon)resources.GetObject("$this.Icon");

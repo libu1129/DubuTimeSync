@@ -30,7 +30,7 @@ public class NtpTool
         var ntpTimes = await GetNtpTimesAsync(ntpServers).ConfigureAwait(false);
 
         // Calculate the median time
-        var medianTime = ntpTimes.Where(p => p.clock != null).Median(p => p.clock.UtcNow.ToUnixTimeMilliseconds()); //GetMedianTime(ntpTimes);
+        var medianTime = ntpTimes.Where(p => p.clock != null).OrderByDescending(p => p.clock.Now).Median(p => p.clock.UtcNow.ToUnixTimeMilliseconds()); //GetMedianTime(ntpTimes);
         on_log?.Invoke($"중간 시간 : {medianTime.server} {medianTime.clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
 
         // Set system time

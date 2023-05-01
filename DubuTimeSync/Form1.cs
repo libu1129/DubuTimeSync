@@ -65,6 +65,7 @@ namespace DubuTimeSync
         private void add_log(string message)
         {
             logs.AddFirst($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}] {message}");
+            if (logs.Count > 300) logs.RemoveLast();
             this.textBox1.Invoke(() =>
             {
                 this.textBox1.Text = string.Join(Environment.NewLine, this.logs);

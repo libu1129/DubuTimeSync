@@ -20,7 +20,12 @@ namespace DubuTimeSync
         {
             InitializeComponent();
             load_setting();
-            if (setting.hide_on_startup) this.Visible = false;
+            if (setting.hide_on_startup) Task.Run(async () =>
+            {
+                await Task.Yield();
+                await Task.Delay(500);
+                this.Invoke(() => this.Visible = false);
+            });
             this.textBox1.Select(0, 0);
             Task.Run(loop);
             tool.on_log += message =>
@@ -99,6 +104,11 @@ namespace DubuTimeSync
         private void º¸±âToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Visible = true;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            //if (this.setting.hide_on_startup) this.Invoke(() =>  this.Hide());
         }
     }
 }

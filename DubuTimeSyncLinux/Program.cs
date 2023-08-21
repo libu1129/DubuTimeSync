@@ -2,6 +2,8 @@
 
 
 
+using CliWrap;
+
 using GuerrillaNtp;
 
 using System.Diagnostics;
@@ -79,24 +81,39 @@ var dtm = medianTime.clock; //이게 로컬타임임
 
 Console.WriteLine($"중간 시간 : {medianTime.server} UTC({dtm.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")}) Local({dtm.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")})");
 
-//Console.WriteLine(medianTime.clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
-var process = new Process
-{
-    StartInfo = new ProcessStartInfo
-    {
-        FileName = "/bin/bash",
-        Arguments = "-c \"" + $"date --set=\"{dtm.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}\"  && date --rfc-3339=ns" + "\"",
-        RedirectStandardOutput = true,
-        UseShellExecute = false,
-        CreateNoWindow = true,
-    }
-};
-process.Start();
+var command = $"date --set=\"{dtm.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}\" && date --rfc-3339=ns";
+Console.WriteLine(command);
 
-string output = process.StandardOutput.ReadToEnd();
-await process.WaitForExitAsync();
-Console.WriteLine(output);
+//var process = new Process
+//{
+//    StartInfo = new ProcessStartInfo
+//    {
+//        FileName = "/bin/bash",
+//        Arguments = $"date --set=\"{dtm.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}\"  && date --rfc-3339=ns" + "\"",
+//        RedirectStandardOutput = true,
+//        UseShellExecute = false,
+//        CreateNoWindow = true,
+//    }
+//};
+//process.Start();
+//string output = process.StandardOutput.ReadToEnd();
+//await process.WaitForExitAsync();
+//Console.WriteLine(output);
+
+
+var result = await Cli.Wrap("bash")
+            .WithArguments(new[] { "-c", $"sudo date --set=\"{dtm.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}\" && date --rfc-3339=ns" })
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteAsync();
+Console.WriteLine(result);
+
+//ProcessStartInfo startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = "/dev/init.d/mnw stop", };
+//Process proc = new Process() { StartInfo = startInfo, };
+//proc.Start();
+
+
+
 Console.WriteLine("시스템 시간 설정 완료");
 
 public class item_vm
